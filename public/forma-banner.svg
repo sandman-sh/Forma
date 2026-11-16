@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="400" viewBox="0 0 1200 400" fill="none">
+  <defs>
+    <linearGradient id="paper" x1="0" y1="0" x2="1200" y2="400" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F8F7F3"/>
+      <stop offset="1" stop-color="#ECEBE6"/>
+    </linearGradient>
+    <linearGradient id="screen" x1="550" y1="76" x2="1065" y2="322" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#D5E3D5"/>
+      <stop offset=".52" stop-color="#8FA991"/>
+      <stop offset="1" stop-color="#536D60"/>
+    </linearGradient>
+    <linearGradient id="hill" x1="767" y1="214" x2="1000" y2="333" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#B8C8AE"/>
+      <stop offset="1" stop-color="#778F79"/>
+    </linearGradient>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" stroke="#777A71" stroke-opacity=".075"/>
+    </pattern>
+    <filter id="shadow" x="514" y="51" width="603" height="306" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feColorMatrix in="SourceAlpha" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+      <feOffset dy="12"/>
+      <feGaussianBlur stdDeviation="14"/>
+      <feComposite in2="hardAlpha" operator="out"/>
+      <feColorMatrix values="0 0 0 0 0.12 0 0 0 0 0.13 0 0 0 0 0.12 0 0 0 .16 0"/>
+      <feBlend in2="BackgroundImageFix" result="effect1_dropShadow"/>
+      <feBlend in="SourceGraphic" in2="effect1_dropShadow" result="shape"/>
+    </filter>
+    <clipPath id="frame">
+      <path d="M568 106c84-14 144 1 224-5 91-7 174 9 282 5v188c-92 8-181-7-274 1-87 7-152-7-232 2V106Z"/>
+    </clipPath>
+  </defs>
+  <path fill="url(#paper)" d="M0 0h1200v400H0z"/>
+  <path fill="url(#grid)" d="M0 0h1200v400H0z"/>
+  <circle cx="1068" cy="67" r="154" fill="#E4E4DC" fill-opacity=".5"/>
+  <path d="M0 343c154-28 285-20 443-2 112 13 191 9 303-7v66H0v-57Z" fill="#E5E3DC"/>
+  <g transform="translate(72 87)">
+    <rect width="48" height="228" rx="24" fill="#fff" fill-opacity=".84" stroke="#D9D8D1"/>
+    <rect x="9" y="12" width="30" height="30" rx="10" fill="#151616"/>
+    <path d="m18 33 12-12 4 4-12 12-6 2 2-6Z" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M18 78h12M18 72l12 12" stroke="#65665F" stroke-width="2" stroke-linecap="round"/>
+    <path d="M18 119h12v12H18z" stroke="#65665F" stroke-width="1.7"/>
+    <circle cx="24" cy="164" r="9" fill="#6F957C" stroke="#567660"/>
+    <circle cx="24" cy="194" r="9" fill="#D77B63" stroke="#B75E4D"/>
+  </g>
+  <g>
+    <text x="174" y="184" fill="#171817" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="73" font-weight="650" letter-spacing="-5">Forma</text>
+    <path d="M177 207c40-5 80 3 122-2 28-3 46 1 70-2" stroke="#62836E" stroke-width="3" stroke-linecap="round"/>
+    <text x="178" y="247" fill="#5D6059" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="19" letter-spacing=".1">A canvas for every frame.</text>
+    <text x="178" y="286" fill="#85867F" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" letter-spacing="1.3">DRAW · SHAPE · PLAY</text>
+  </g>
+  <g filter="url(#shadow)">
+    <path d="M568 106c84-14 144 1 224-5 91-7 174 9 282 5v188c-92 8-181-7-274 1-87 7-152-7-232 2V106Z" fill="url(#screen)"/>
+    <g clip-path="url(#frame)">
+      <path d="M554 98h536v205H554z" fill="url(#screen)"/>
+      <circle cx="966" cy="149" r="34" fill="#F2E7C9" fill-opacity=".9"/>
+      <path d="M536 251c74-37 105-43 174-27 55 13 77-25 126-27 55-2 69 49 135 29 55-17 92-45 153-21v103H536V251Z" fill="url(#hill)"/>
+      <path d="M544 271c69-25 133-18 194-2 58 15 95 11 143-7 55-21 117-11 231 12v61H544v-64Z" fill="#526E5E" fill-opacity=".88"/>
+      <path d="M553 289c87-8 140-1 218 4 81 5 153-12 233-5 44 4 75 8 113 17v42H553v-58Z" fill="#D4DCC8" fill-opacity=".28"/>
+      <path d="M568 106c84-14 144 1 224-5 91-7 174 9 282 5v188c-92 8-181-7-274 1-87 7-152-7-232 2V106Z" stroke="#171817" stroke-width="3"/>
+    </g>
+    <circle cx="815" cy="199" r="29" fill="#111312" fill-opacity=".72"/>
+    <path d="m808 187 19 12-19 12v-24Z" fill="#fff"/>
+  </g>
+  <path d="m1104 92 22-22 8 8-22 22-13 5 5-13Z" fill="#fff" stroke="#252623" stroke-width="2" stroke-linejoin="round"/>
+</svg>

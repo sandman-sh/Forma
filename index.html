@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="description" content="Forma is a creative video player shaped by your drawings." />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Forma</title>
+  </head>
+  <body>
+    <main class="studio-layout" aria-label="Forma video studio">
+      <aside class="tool-rail" aria-label="Canvas tools">
+        <div class="rail-group" role="group" aria-label="Frame drawing tools">
+          <button class="icon-tool is-active" type="button" data-tool="pencil" aria-pressed="true" aria-label="Pencil tool, draw a video frame" title="Pencil (P)">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 16.8-.8 4 4-.8L20 7.2 16.8 4 4 16.8Z"/><path d="m14.8 6 3.2 3.2M4 17l3 3"/></svg>
+          </button>
+          <button class="icon-tool" type="button" data-tool="eraser" aria-pressed="false" aria-label="Eraser tool" title="Eraser (E)">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7.5 20-4-4a2 2 0 0 1 0-2.8l8.7-8.7a2 2 0 0 1 2.8 0l5.5 5.5a2 2 0 0 1 0 2.8L13 20H7.5Z"/><path d="m8 8 8 8M14 20h7"/></svg>
+          </button>
+        </div>
+
+        <div class="eraser-settings" id="eraser-settings" hidden>
+          <label for="eraser-size">Brush size <output id="eraser-size-value" for="eraser-size">32 px</output></label>
+          <input id="eraser-size" type="range" min="8" max="96" step="2" value="32" aria-label="Eraser brush size" />
+          <div class="eraser-range-labels" aria-hidden="true"><span>Fine</span><span>Wide</span></div>
+        </div>
+        <span class="rail-divider" aria-hidden="true"></span>
+
+        <div class="rail-group color-tools" role="group" aria-label="Color pencil">
+          <div class="color-tool-wrap">
+            <button class="icon-tool" type="button" data-tool="color-pencil" aria-pressed="false" aria-expanded="false" aria-label="Color pencil, draw on the white canvas" aria-controls="ink-settings" title="Color pencil">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 16.8-.8 4 4-.8L20 7.2 16.8 4 4 16.8Z"/><path d="m14.8 6 3.2 3.2M4 17l3 3"/><path d="m3.2 20.8 3.7-.8-3-3z" fill="currentColor" stroke="none"/></svg>
+            </button>
+            <div class="ink-settings" id="ink-settings" role="group" aria-label="Color pencil settings" aria-hidden="true" hidden>
+              <span class="ink-settings-title">Pencil color</span>
+              <label class="ink-size-label" for="pencil-size">Stroke size <output id="pencil-size-value" for="pencil-size">5 px</output></label>
+              <input id="pencil-size" type="range" min="1" max="28" step="1" value="5" aria-label="Color pencil stroke size" />
+              <div class="eraser-range-labels" aria-hidden="true"><span>Fine</span><span>Bold</span></div>
+              <div class="ink-swatches" role="radiogroup" aria-label="Color pencil color">
+                <button class="ink-swatch is-selected" type="button" role="radio" aria-checked="true" tabindex="0" data-ink="#17181a" aria-label="Carbon black" title="Carbon black"><span style="--swatch:#17181a"></span></button>
+                <button class="ink-swatch" type="button" role="radio" aria-checked="false" tabindex="-1" data-ink="#383a3e" aria-label="Graphite" title="Graphite"><span style="--swatch:#383a3e"></span></button>
+                <button class="ink-swatch" type="button" role="radio" aria-checked="false" tabindex="-1" data-ink="#55595f" aria-label="Slate" title="Slate"><span style="--swatch:#55595f"></span></button>
+                <button class="ink-swatch" type="button" role="radio" aria-checked="false" tabindex="-1" data-ink="#73777e" aria-label="Steel gray" title="Steel gray"><span style="--swatch:#73777e"></span></button>
+                <button class="ink-swatch" type="button" role="radio" aria-checked="false" tabindex="-1" data-ink="#315b4b" aria-label="Pine" title="Pine"><span style="--swatch:#315b4b"></span></button>
+                <button class="ink-swatch" type="button" role="radio" aria-checked="false" tabindex="-1" data-ink="#405978" aria-label="Deep blue" title="Deep blue"><span style="--swatch:#405978"></span></button>
+                <button class="ink-swatch" type="button" role="radio" aria-checked="false" tabindex="-1" data-ink="#8b4f3e" aria-label="Terracotta" title="Terracotta"><span style="--swatch:#8b4f3e"></span></button>
+                <button class="ink-swatch" type="button" role="radio" aria-checked="false" tabindex="-1" data-ink="#674b70" aria-label="Plum" title="Plum"><span style="--swatch:#674b70"></span></button>
+              </div>
+              <label class="custom-ink-label" for="custom-ink">Custom color <input id="custom-ink" type="color" value="#17181a" aria-label="Choose a custom pencil color" /></label>
+            </div>
+          </div>
+        </div>
+
+        <span class="rail-divider" aria-hidden="true"></span>
+
+        <div class="rail-group frame-tools" role="group" aria-label="Frame shapes">
+          <button class="icon-tool shape-tool" type="button" data-shape="wide" aria-pressed="false" aria-label="Create a 16 by 9 widescreen video frame" title="Widescreen · 16:9">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="6.5" width="17" height="11" rx="2.2"/></svg>
+          </button>
+          <button class="icon-tool shape-tool" type="button" data-shape="square" aria-pressed="false" aria-label="Create a 1 by 1 square video frame" title="Square · 1:1">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5.5" y="5.5" width="13" height="13" rx="2.2"/></svg>
+          </button>
+          <button class="icon-tool shape-tool" type="button" data-shape="vintage" aria-pressed="false" aria-label="Create a 4 by 3 classic video frame" title="Classic · 4:3">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="6" width="15" height="12" rx="2.2"/></svg>
+          </button>
+        </div>
+
+        <span class="rail-divider" aria-hidden="true"></span>
+
+        <div class="rail-group shapes-tools">
+          <div class="popover-wrap" id="shapes-tool-wrap">
+            <button class="icon-tool" id="shapes-trigger" type="button" aria-label="Open shape tools" aria-expanded="false" aria-controls="shapes-panel" title="Shapes">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4" width="9" height="8" rx="1.5"/><circle cx="16.5" cy="8" r="4"/><path d="m5 20 5-7 5 7H5Zm12-1 3-5 3 5h-6Z"/></svg>
+            </button>
+            <div class="tool-popover shapes-panel" id="shapes-panel" role="group" aria-label="Shape tools" aria-hidden="true" hidden>
+              <div class="popover-heading">Shapes</div>
+              <div class="shape-mode-tools" role="group" aria-label="Shape editing tools">
+                <button class="mini-tool" data-tool="shape-select" type="button" aria-pressed="false" aria-label="Select, move, or resize a shape" title="Select / move / resize"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3 19 13l-6 .7L10 20 5 3Z"/></svg></button>
+                <button class="mini-tool" data-tool="shape-rect" type="button" aria-pressed="false" aria-label="Draw a rectangle" title="Rectangle"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2"/></svg></button>
+                <button class="mini-tool" data-tool="shape-ellipse" type="button" aria-pressed="false" aria-label="Draw an ellipse" title="Ellipse"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="12" rx="8" ry="6.5"/></svg></button>
+                <button class="mini-tool" data-tool="shape-triangle" type="button" aria-pressed="false" aria-label="Draw a triangle" title="Triangle"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 4 9 16H3L12 4Z"/></svg></button>
+                <button class="mini-tool" data-tool="shape-star" type="button" aria-pressed="false" aria-label="Draw a star" title="Star"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.7 5.7 6.3.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.3-.9L12 3Z"/></svg></button>
+                <button class="mini-tool" data-tool="shape-fill" type="button" aria-pressed="false" aria-label="Color fill tool, click a shape to fill it" title="Color fill"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 15 8-8 8 8-8 6-8-6Z"/><path d="M12 7V3m7 18h2"/></svg></button>
+              </div>
+              <div class="popover-rule"></div>
+              <span class="settings-caption">Fill color</span>
+              <div class="shape-color-swatches" role="radiogroup" aria-label="Shape fill color">
+                <button class="shape-color-swatch is-selected" type="button" role="radio" aria-checked="true" data-shape-color="#e6b64c" aria-label="Marigold"><span style="--shape-swatch:#e6b64c"></span></button>
+                <button class="shape-color-swatch" type="button" role="radio" aria-checked="false" tabindex="-1" data-shape-color="#548b71" aria-label="Sage"><span style="--shape-swatch:#548b71"></span></button>
+                <button class="shape-color-swatch" type="button" role="radio" aria-checked="false" tabindex="-1" data-shape-color="#6888c6" aria-label="Blue"><span style="--shape-swatch:#6888c6"></span></button>
+                <button class="shape-color-swatch" type="button" role="radio" aria-checked="false" tabindex="-1" data-shape-color="#bd6b63" aria-label="Coral"><span style="--shape-swatch:#bd6b63"></span></button>
+                <button class="shape-color-swatch" type="button" role="radio" aria-checked="false" tabindex="-1" data-shape-color="#8d70a9" aria-label="Lavender"><span style="--shape-swatch:#8d70a9"></span></button>
+                <label class="shape-custom-color" title="Custom fill color"><input id="shape-custom-color" type="color" value="#e6b64c" aria-label="Choose a custom shape fill color" /></label>
+              </div>
+              <label class="shape-opacity-label" for="shape-opacity">Opacity <output id="shape-opacity-value">82%</output></label>
+              <input id="shape-opacity" type="range" min="15" max="100" step="1" value="82" aria-label="Shape fill opacity" />
+              <span class="shape-hint">Drag to draw · select to move or resize</span>
+            </div>
+          </div>
+        </div>
+
+        <span class="rail-divider" aria-hidden="true"></span>
+
+        <div class="rail-group wallpaper-tools">
+          <div class="popover-wrap" id="wallpaper-tool-wrap">
+            <button class="icon-tool" id="wallpaper-trigger" type="button" aria-label="Open background images" aria-expanded="false" aria-controls="wallpaper-panel" title="Images">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="m4 17 5-5 3.5 3 3.5-4 4 5"/></svg>
+            </button>
+            <div class="tool-popover wallpaper-panel" id="wallpaper-panel" role="group" aria-label="Background images" aria-hidden="true" hidden>
+              <div class="popover-heading">Backgrounds</div>
+              <div class="wallpaper-library" role="radiogroup" aria-label="Choose a background image">
+                <button class="wallpaper-swatch" role="radio" aria-checked="false" type="button" data-wallpaper="/wallpapers/golden-lake.png" data-wallpaper-name="Golden lake"><img src="/wallpapers/golden-lake.png" alt="" /><span>Golden lake</span></button>
+                <button class="wallpaper-swatch" role="radio" aria-checked="false" type="button" data-wallpaper="/wallpapers/spring-bridge.png" data-wallpaper-name="Spring bridge"><img src="/wallpapers/spring-bridge.png" alt="" /><span>Spring bridge</span></button>
+                <button class="wallpaper-swatch" role="radio" aria-checked="false" type="button" data-wallpaper="/wallpapers/moonlit-lake.png" data-wallpaper-name="Moonlit lake"><img src="/wallpapers/moonlit-lake.png" alt="" /><span>Moonlit lake</span></button>
+              </div>
+              <button class="video-upload-action wallpaper-upload-action" id="upload-wallpaper" type="button" aria-label="Upload a background image"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3m0 0L7.5 7.5M12 3l4.5 4.5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg><span>Upload image</span></button>
+              <label class="wallpaper-fit-label" for="wallpaper-fit">Image fit<select id="wallpaper-fit" aria-label="Background image fit"><option value="cover">Fill canvas</option><option value="contain">Fit whole image</option></select></label>
+              <label class="wallpaper-opacity-label" for="wallpaper-opacity">Image strength <output id="wallpaper-opacity-value">100%</output></label>
+              <input id="wallpaper-opacity" type="range" min="10" max="100" step="1" value="100" aria-label="Background image opacity" />
+              <button class="wallpaper-clear" id="clear-wallpaper" type="button">Remove background</button>
+            </div>
+          </div>
+        </div>
+
+        <span class="rail-divider" aria-hidden="true"></span>
+
+        <div class="rail-group video-tools" role="group" aria-label="Video palette">
+          <div class="video-palette-wrap">
+            <button class="icon-tool video-palette-trigger" id="video-palette-trigger" type="button" aria-label="Open video palette" aria-expanded="false" aria-controls="video-palette-panel" title="Videos">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="13" height="14" rx="2"/><path d="m16 10 5-3v10l-5-3"/></svg>
+            </button>
+            <div class="video-palette-panel" id="video-palette-panel" role="group" aria-label="Choose or add a video" aria-hidden="true" hidden>
+              <div class="film-tools" role="radiogroup" aria-label="Video palette">
+                <button class="film-swatch is-selected" role="radio" aria-checked="true" tabindex="0" type="button" data-film="joyride" aria-label="Big Buck Bunny animation with audio, 1080p" title="Big Buck Bunny · 1080p"><span class="swatch-color color-moss" aria-hidden="true"></span></button>
+                <button class="film-swatch" role="radio" aria-checked="false" tabindex="-1" type="button" data-film="wildrobot" aria-label="The Wild Robot" title="The Wild Robot"><span class="swatch-color" style="--film-color:#6652a5" aria-hidden="true"></span></button>
+              </div>
+              <button class="video-upload-action" id="upload-video" type="button" aria-label="Add videos to palette" title="Add videos">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3m0 0L7.5 7.5M12 3l4.5 4.5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg>
+                <span>Add videos</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="rail-spacer"></div>
+        <span class="rail-divider" aria-hidden="true"></span>
+        <button class="icon-tool reset-tool" id="reset-frame" type="button" aria-label="Clear the canvas" title="Clear canvas">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8a8 8 0 1 1-.2 7M4 3.5V8h4.5"/></svg>
+        </button>
+        <input id="video-upload" type="file" accept="video/*" multiple hidden aria-label="Choose videos to add to the video palette" />
+        <input id="wallpaper-upload-input" type="file" accept="image/*" hidden aria-label="Choose a background image" />
+      </aside>
+
+      <section class="canvas-panel" aria-label="White drawing canvas and video player">
+        <div class="canvas-surface">
+          <div class="help-hub" id="help-hub">
+            <button class="help-trigger" id="help-trigger" type="button" aria-label="Help" aria-expanded="false" aria-controls="help-panel" title="Help">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.8 9a2.3 2.3 0 1 1 3.7 1.8c-.9.7-1.5 1.1-1.5 2.2M12 16.5h.01"/></svg>
+            </button>
+            <section class="help-popover" id="help-panel" role="region" aria-labelledby="help-title" aria-hidden="true">
+              <h2 id="help-title">Canvas guide</h2>
+              <dl>
+                <div><dt>Frame pencil</dt><dd>Draw a closed outline to shape the video.</dd></div>
+                <div><dt>Color pencil</dt><dd>Sketch around the video. Adjust stroke width and pick a preset or custom color.</dd></div>
+                <div><dt>Eraser</dt><dd>Erase video, frame edges, and pencil marks. Adjust brush size in the popover.</dd></div>
+                <div><dt>Shape stamps</dt><dd>Tap a rectangle to create a widescreen, square, or classic frame.</dd></div>
+                <div><dt>Shapes</dt><dd>Draw rectangles, ellipses, triangles, and stars. Select a shape to move or resize it, or use Color fill to recolor it.</dd></div>
+                <div><dt>Images</dt><dd>Choose a painted background or upload your own. Adjust the fit and opacity, then draw over the canvas.</dd></div>
+                <div><dt>Video palette</dt><dd>Hover, focus, or tap the film icon to switch clips or add your own videos.</dd></div>
+                <div><dt>Player controls</dt><dd>Play, seek, change volume, and open playback settings for speed, captions, tracks, quality, and device playback.</dd></div>
+                <div><dt>Keyboard</dt><dd>Space plays or pauses, M mutes, F toggles fullscreen, and the arrow keys seek.</dd></div>
+              </dl>
+            </section>
+          </div>
+          <forma-player class="canvas-player" orientation-lock-type="landscape">
+            <media-container class="player-shell">
+              <div class="video-view" id="video-view" data-tool="pencil">
+                <img class="wallpaper-image" id="wallpaper-image" alt="" aria-hidden="true" />
+        <div class="media-window"><mux-video id="canvas-video" src="https://stream.mux.com/cTHWdt0138su1T79PPQm3Fv7Xq01ulHRSiBF3uCQ0035iY.m3u8" crossorigin="anonymous" loop playsinline preload="none"></mux-video></div>
+                <div class="art-window" id="art-window" aria-hidden="true"><svg class="art-svg" id="art-svg" viewBox="0 0 1000 562.5" preserveAspectRatio="none"><g id="drawn-art"></g><g id="shape-selection-layer"></g></svg></div>
+                <div class="eraser-cursor" id="eraser-cursor" aria-hidden="true"></div>
+                <svg class="frame-overlay" id="frame-overlay" viewBox="0 0 1000 562.5" preserveAspectRatio="none" aria-hidden="true">
+                  <defs>
+                    <clipPath id="video-clip" clipPathUnits="objectBoundingBox"><path id="clip-path" d=""></path></clipPath>
+                    <mask id="video-erase-mask" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse" x="0" y="0" width="100%" height="100%" style="mask-type:luminance">
+                      <rect x="0" y="0" width="100%" height="100%" fill="white"></rect>
+                      <g id="erase-mask-strokes" fill="none" stroke="black" stroke-linecap="round" stroke-linejoin="round"></g>
+                    </mask>
+                    <mask id="art-erase-mask" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse" x="0" y="0" width="100%" height="100%" style="mask-type:luminance">
+                      <rect x="0" y="0" width="100%" height="100%" fill="white"></rect>
+                      <g id="art-erase-mask-strokes" fill="none" stroke="black" stroke-linecap="round" stroke-linejoin="round"></g>
+                    </mask>
+                    <mask id="outline-erase-mask" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse" x="0" y="0" width="1000" height="562.5" style="mask-type:luminance">
+                      <rect id="outline-erase-mask-rect" x="0" y="0" width="1000" height="562.5" fill="white"></rect>
+                      <g id="outline-erase-mask-strokes" fill="none" stroke="black" stroke-linecap="round" stroke-linejoin="round"></g>
+                    </mask>
+                  </defs>
+                  <path id="frame-outline" class="frame-outline" d=""></path>
+                  <path id="drawing-preview" class="drawing-preview" d=""></path>
+                  <rect class="draw-hit-area" x="0" y="0" width="1000" height="562.5"></rect>
+                </svg>
+                <button class="canvas-play-overlay" id="canvas-play-overlay" type="button" aria-label="Play video" aria-hidden="true" tabindex="-1">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7z"/></svg>
+                </button>
+                <span class="visually-hidden" id="active-film-label">Big Buck Bunny video with audio</span>
+                <span class="visually-hidden" id="frame-number">001</span>
+                <div class="draw-prompt" id="drawing-prompt">
+                  <span class="prompt-script">Draw your player</span>
+                  <span class="prompt-detail">Sketch a frame or choose a shape</span>
+                </div>
+                <div class="load-state" id="load-state" role="status" aria-live="polite">Loading video…</div>
+              </div>
+
+              <span class="visually-hidden" id="stage-size">Blank canvas</span>
+
+              <media-controls class="canvas-controls">
+                <media-controls-content class="control-content">
+                  <media-time-slider class="seek-slider" aria-label="Seek video">
+                    <media-slider-track class="seek-track"><media-slider-buffer class="seek-buffer"></media-slider-buffer><media-slider-fill class="seek-fill"></media-slider-fill></media-slider-track>
+                    <media-time-slider-chapters class="seek-chapters"><template><div class="seek-chapter"><media-slider-track><media-slider-buffer></media-slider-buffer><media-slider-fill></media-slider-fill></media-slider-track></div></template></media-time-slider-chapters>
+                    <media-slider-thumb class="seek-thumb"></media-slider-thumb>
+                    <media-slider-preview class="seek-preview">
+                      <media-slider-thumbnail class="seek-thumbnail"><media-thumbnail></media-thumbnail></media-slider-thumbnail>
+                      <media-time-slider-chapter-title class="seek-chapter-title"></media-time-slider-chapter-title>
+                      <media-slider-value type="pointer" class="seek-value"></media-slider-value>
+                    </media-slider-preview>
+                  </media-time-slider>
+                  <media-controls-group class="control-row" aria-label="Video playback controls">
+                    <media-play-button class="control-button play-control" aria-label="Play or pause video">
+                      <span class="play-state play-state-paused" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m8 5 11 7-11 7z"/></svg></span>
+                      <span class="play-state play-state-playing" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 5h4v14H7zm7 0h4v14h-4z"/></svg></span>
+                    </media-play-button>
+                    <div class="time-readout"><media-time type="current" class="current-time"></media-time><span>/</span><media-time type="duration" class="duration-time"></media-time></div>
+                    <div class="control-spacer"></div>
+                    <media-mute-button class="control-button mute-control" aria-label="Mute or unmute">
+                      <span class="mute-state mute-state-on" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path d="m17 9 5 6m0-6-5 6"/></svg></span>
+                      <span class="mute-state mute-state-off" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path d="M16 9a5 5 0 0 1 0 6m2-9a9 9 0 0 1 0 12"/></svg></span>
+                    </media-mute-button>
+                    <media-volume-slider class="volume-slider" label="Volume" step="5" aria-label="Volume">
+                      <media-slider-track class="volume-track"><media-slider-fill class="volume-fill"></media-slider-fill></media-slider-track><media-slider-thumb class="volume-thumb"></media-slider-thumb>
+                    </media-volume-slider>
+                    <media-fullscreen-button class="control-button fullscreen-control" aria-label="Toggle fullscreen">
+                      <span class="fullscreen-state fullscreen-enter" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 9V4h5m6 0h5v5m0 6v5h-5m-6 0H4v-5"/></svg></span>
+                      <span class="fullscreen-state fullscreen-exit" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 4v5H4m11-5v5h5m-11 6v5H4m11 0v-5h5"/></svg></span>
+                    </media-fullscreen-button>
+                    <button class="control-button settings-trigger" type="button" commandfor="player-settings" aria-label="Playback settings" title="Playback settings">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="m19.4 15 .1.1a1.8 1.8 0 1 1-2.5 2.5l-.1-.1a1.8 1.8 0 0 0-3 .9v.2a1.8 1.8 0 1 1-3.6 0v-.2a1.8 1.8 0 0 0-3-.9l-.1.1a1.8 1.8 0 1 1-2.5-2.5l.1-.1a1.8 1.8 0 0 0-.9-3h-.2a1.8 1.8 0 1 1 0-3.6h.2a1.8 1.8 0 0 0 .9-3l-.1-.1a1.8 1.8 0 1 1 2.5-2.5l.1.1a1.8 1.8 0 0 0 3-.9v-.2a1.8 1.8 0 1 1 3.6 0v.2a1.8 1.8 0 0 0 3 .9l.1-.1a1.8 1.8 0 1 1 2.5 2.5l-.1.1a1.8 1.8 0 0 0 .9 3h.2a1.8 1.8 0 1 1 0 3.6h-.2a1.8 1.8 0 0 0-.9 3Z"/></svg>
+                    </button>
+                  </media-controls-group>
+                </media-controls-content>
+              </media-controls>
+
+              <media-menu id="player-settings" class="player-settings-menu" side="top" align="end">
+                <media-menu-content class="player-settings-content">
+                  <media-menu-group class="settings-section">
+                    <media-menu-group-label>Navigation</media-menu-group-label>
+                    <div class="settings-seek-row" role="group" aria-label="Skip through video">
+                      <media-seek-button seconds="-10" class="settings-seek-button" aria-label="Back 10 seconds"><span aria-hidden="true">−10s</span></media-seek-button>
+                      <media-seek-button seconds="10" class="settings-seek-button" aria-label="Forward 10 seconds"><span aria-hidden="true">+10s</span></media-seek-button>
+                    </div>
+                    <div class="settings-seek-row" role="group" aria-label="Switch videos">
+                      <button class="settings-seek-button" id="previous-film" type="button" aria-label="Previous video"><span aria-hidden="true">Previous</span></button>
+                      <button class="settings-seek-button" id="next-film" type="button" aria-label="Next video"><span aria-hidden="true">Next</span></button>
+                    </div>
+                    <media-live-button class="settings-device-button" aria-label="Go to live edge"><span>Go to live</span></media-live-button>
+                  </media-menu-group>
+                  <media-menu-separator></media-menu-separator>
+                  <media-menu-group class="settings-section">
+                    <media-menu-group-label>Playback speed</media-menu-group-label>
+                    <media-playback-rate-radio-group label="Playback speed">
+                      <template><media-menu-radio-item class="settings-option"><span data-part="label"></span><media-menu-item-indicator force-mount>✓</media-menu-item-indicator></media-menu-radio-item></template>
+                    </media-playback-rate-radio-group>
+                  </media-menu-group>
+                  <media-menu-separator></media-menu-separator>
+                  <media-menu-group class="settings-section">
+                    <media-menu-group-label>Captions</media-menu-group-label>
+                    <media-captions-radio-group label="Captions">
+                      <template><media-menu-radio-item class="settings-option"><span data-part="label"></span><media-menu-item-indicator force-mount>✓</media-menu-item-indicator></media-menu-radio-item></template>
+                    </media-captions-radio-group>
+                    <button class="settings-action" id="upload-captions" type="button">Load WebVTT captions…</button>
+                    <input id="caption-upload" type="file" accept=".vtt,text/vtt" hidden aria-label="Choose a WebVTT caption file" />
+                    <button class="settings-action" id="upload-chapters" type="button">Load chapter markers…</button>
+                    <input id="chapter-upload" type="file" accept=".vtt,text/vtt" hidden aria-label="Choose a WebVTT chapter file" />
+                  </media-menu-group>
+                  <media-menu-separator></media-menu-separator>
+                  <media-menu-group class="settings-section">
+                    <media-menu-group-label>Audio track</media-menu-group-label>
+                    <media-audio-track-radio-group label="Audio track">
+                      <template><media-menu-radio-item class="settings-option"><span data-part="label"></span><media-menu-item-indicator force-mount>✓</media-menu-item-indicator></media-menu-radio-item></template>
+                    </media-audio-track-radio-group>
+                  </media-menu-group>
+                  <media-menu-separator></media-menu-separator>
+                  <media-menu-group class="settings-section">
+                    <media-menu-group-label>Video quality</media-menu-group-label>
+                    <media-quality-radio-group label="Video quality">
+                      <template><media-menu-radio-item class="settings-option"><span data-part="label"></span><media-menu-item-indicator force-mount>✓</media-menu-item-indicator></media-menu-radio-item></template>
+                    </media-quality-radio-group>
+                  </media-menu-group>
+                  <media-menu-separator></media-menu-separator>
+                  <media-menu-group class="settings-section settings-device-options">
+                    <media-menu-group-label>Devices</media-menu-group-label>
+                    <media-pip-button class="settings-device-button" aria-label="Picture in picture"><span>Picture in picture</span></media-pip-button>
+                    <media-airplay-button class="settings-device-button"><span>AirPlay</span></media-airplay-button>
+                    <media-cast-button class="settings-device-button"><span>Cast</span></media-cast-button>
+                  </media-menu-group>
+                  <media-menu-separator></media-menu-separator>
+                  <media-menu-group class="settings-section">
+                    <media-menu-group-label>Fullscreen orientation</media-menu-group-label>
+                    <label class="orientation-option" for="orientation-lock-select">Lock screen</label>
+                    <select id="orientation-lock-select" class="orientation-select" aria-label="Fullscreen screen orientation">
+                      <option value="landscape">Landscape</option>
+                      <option value="portrait">Portrait</option>
+                      <option value="none">No lock</option>
+                    </select>
+                  </media-menu-group>
+                  <media-menu-separator></media-menu-separator>
+                  <media-menu-group class="settings-section">
+                    <media-menu-group-label>Playback analytics</media-menu-group-label>
+                    <label class="analytics-option"><input id="mux-analytics-toggle" type="checkbox" /> Share playback metrics with Mux</label>
+                  </media-menu-group>
+                </media-menu-content>
+              </media-menu>
+
+              <media-buffering-indicator class="buffering-indicator" delay="400"><span class="buffering-spinner" aria-hidden="true"></span><span class="visually-hidden">Buffering video</span></media-buffering-indicator>
+              <media-seek-indicator class="seek-indicator" aria-hidden="true"><media-seek-indicator-value></media-seek-indicator-value></media-seek-indicator>
+              <media-volume-indicator class="volume-indicator" aria-hidden="true"><media-volume-indicator-fill><media-volume-indicator-value></media-volume-indicator-value></media-volume-indicator-fill></media-volume-indicator>
+              <google-cast id="forma-google-cast" receiver="CC1AD845"></google-cast>
+              <mux-data id="forma-mux-data" player-software-name="forma-videojs-v10" disable-cookies></mux-data>
+
+              <media-hotkey target="document" keys="Space" action="togglePaused"></media-hotkey>
+              <media-hotkey target="document" keys="m" action="toggleMuted"></media-hotkey>
+              <media-hotkey target="document" keys="f" action="toggleFullscreen"></media-hotkey>
+              <media-hotkey target="document" keys="ArrowLeft" action="seekStep" value="-5"></media-hotkey>
+              <media-hotkey target="document" keys="ArrowRight" action="seekStep" value="5"></media-hotkey>
+              <media-hotkey target="document" keys="0-9" action="seekToPercent"></media-hotkey>
+              <media-hotkey target="document" keys="ArrowUp" action="volumeStep" value="0.05"></media-hotkey>
+              <media-hotkey target="document" keys="ArrowDown" action="volumeStep" value="-0.05"></media-hotkey>
+              <media-hotkey target="document" keys="Shift+ArrowRight" action="speedUp"></media-hotkey>
+              <media-hotkey target="document" keys="Shift+ArrowLeft" action="speedDown"></media-hotkey>
+              <media-gesture type="doubletap" region="left" pointer="touch" action="seekStep" value="-10"></media-gesture>
+              <media-gesture type="doubletap" region="right" pointer="touch" action="seekStep" value="10"></media-gesture>
+              <media-gesture type="doubletap" region="center" pointer="touch" action="togglePaused"></media-gesture>
+              <media-status-announcer></media-status-announcer>
+              <media-error-dialog><media-dialog-popup class="error-popup"><media-dialog-title></media-dialog-title><media-dialog-description></media-dialog-description><media-dialog-close></media-dialog-close></media-dialog-popup></media-error-dialog>
+            </media-container>
+          </forma-player>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

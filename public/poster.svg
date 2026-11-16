@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900">
+  <defs>
+    <linearGradient id="sky" x2="0" y2="1"><stop stop-color="#96b4b0"/><stop offset=".54" stop-color="#d4c7a9"/><stop offset=".55" stop-color="#556d6b"/><stop offset="1" stop-color="#263e3d"/></linearGradient>
+    <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency=".7" numOctaves="3" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="table" tableValues="0 .12"/></feComponentTransfer><feBlend in="SourceGraphic" mode="soft-light"/></filter>
+  </defs>
+  <rect width="1600" height="900" fill="url(#sky)"/>
+  <path d="M0 474c204-31 332 19 520-3s324-35 495 4 354 25 585-14v439H0Z" fill="#405b58"/>
+  <path d="M0 566c202-42 312 34 490 4s315-55 470-5 378 44 640-20v355H0Z" fill="#304945"/>
+  <path d="M0 715c214-27 383 34 605 1s408-49 552 1 304 23 443-4v187H0Z" fill="#203936"/>
+  <path d="M0 570c185 12 360 23 525 1s324-19 449 9 306 34 626-2" fill="none" stroke="#d8c9aa" stroke-opacity=".4" stroke-width="4"/>
+  <g filter="url(#grain)"><rect width="1600" height="900" fill="transparent"/></g>
+</svg>
