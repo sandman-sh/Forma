@@ -263,6 +263,7 @@ button:focus-visible, a:focus-visible, media-time-slider:focus-visible, media-vo
 .video-view:not(.has-frame) .canvas-play-overlay { top:50%; bottom:auto; left:50%; opacity:1; visibility:visible; pointer-events:auto; transform:translate(-50%,-50%); }
 .video-view:not(.has-frame) .canvas-play-overlay:hover { transform:translate(-50%,-50%) scale(1.03); }
 .video-view:not(.has-frame) .canvas-play-overlay:active { transform:translate(-50%,-50%) scale(.96); }
+.video-view:not(.has-frame) .draw-prompt { visibility:hidden; }
 .video-view::after { display:none !important; }
 
 .help-hub { position:absolute; z-index:14; top:20px; right:22px; }

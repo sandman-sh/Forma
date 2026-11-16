@@ -157,11 +157,10 @@ function hideDrawingPrompt() {
 }
 
 function syncPlayOverlay() {
-  const empty = !view.classList.contains('has-frame');
-  const visible = empty || !view.classList.contains('is-playing');
+  const visible = !view.classList.contains('has-frame') || !view.classList.contains('is-playing');
   canvasPlayOverlay.setAttribute('aria-hidden', String(!visible));
   canvasPlayOverlay.tabIndex = visible ? 0 : -1;
-  canvasPlayOverlay.setAttribute('aria-label', empty ? 'Create a video frame and play' : 'Play video');
+  canvasPlayOverlay.setAttribute('aria-label', 'Play video');
 }
 
 syncPlayOverlay();
@@ -532,7 +531,7 @@ function setFilm(id, { focus = false } = {}) {
   activeFilm = id;
   media.pause();
   mediaSourceLoaded = false;
-  if (mediaRequested && !applyFilmSource(film)) return;
+  if (!applyFilmSource(film)) return;
   label.textContent = `${film.name} video`;
   frameNumber.textContent = String(++sketchIndex).padStart(3, '0');
   filmRadios.forEach((radio) => {
@@ -1586,7 +1585,6 @@ const resizeObserver = new ResizeObserver(() => {
 resizeObserver.observe(view);
 
 setFilm(activeFilm);
-updateFrame('wide', null, false);
-startVideoInFrame();
+hideDrawingPrompt();
 void restoreLocalVideos();
 void restoreLocalWallpapers();
