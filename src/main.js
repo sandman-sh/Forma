@@ -477,7 +477,7 @@ function applyFilmSource(film) {
   return true;
 }
 
-function requestSelectedVideoPlayback() {
+function requestSelectedVideoPlayback({ waitForSource = false } = {}) {
   const film = films[activeFilm];
   if (!film) return;
   const retryingFailedSource = view.classList.contains('media-error');
@@ -489,19 +489,35 @@ function requestSelectedVideoPlayback() {
   loadState.classList.add('is-visible');
   if (!mediaSourceLoaded && !applyFilmSource(film)) return;
   player.store.setMuted(false);
-  if (retryingFailedSource) media.load();
   const reportPlayFailure = (error) => {
     if (requestId !== playbackRequestId || error?.name === 'AbortError') return;
     loadState.textContent = 'Video could not start. Press Play to retry.';
     loadState.classList.add('is-visible');
   };
-  media.addEventListener('canplay', () => {
-    if (requestId !== playbackRequestId || !mediaRequested || !media.paused) return;
-    media.play().catch(reportPlayFailure);
-  }, { once: true });
+  const attemptPlayback = () => {
+    if (requestId !== playbackRequestId || !mediaRequested || view.classList.contains('is-playing')) return;
+    media.play().catch((error) => {
+      // Changing sources can interrupt play(). Retry once the new stream is ready.
+      if (requestId !== playbackRequestId) return;
+      if (error?.name === 'AbortError') {
+        if (media.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
+          queueMicrotask(() => media.play().catch(reportPlayFailure));
+        }
+        return;
+      }
+      if (media.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) reportPlayFailure(error);
+    });
+  };
+
+  if (waitForSource || retryingFailedSource) {
+    media.addEventListener('canplay', attemptPlayback, { once: true });
+    media.load();
+    if (media.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) attemptPlayback();
+    return;
+  }
+
+  media.addEventListener('canplay', attemptPlayback, { once: true });
   media.play().catch((error) => {
-    // Changing the Mux source can interrupt this first play() call. Keep the
-    // click alive and retry as soon as the newly selected stream can play.
     if (requestId !== playbackRequestId) return;
     if (error?.name === 'AbortError') {
       if (media.paused && media.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
@@ -529,6 +545,7 @@ function setFilm(id, { focus = false } = {}) {
     uploadedChapterUrl = '';
   }
   activeFilm = id;
+  const shouldResumePlayback = mediaRequested && view.classList.contains('has-frame');
   media.pause();
   mediaSourceLoaded = false;
   if (!applyFilmSource(film)) return;
@@ -542,7 +559,7 @@ function setFilm(id, { focus = false } = {}) {
     if (selected && focus) radio.focus();
   });
   if (view.classList.contains('has-frame')) {
-    if (mediaRequested) requestSelectedVideoPlayback();
+    if (shouldResumePlayback) requestSelectedVideoPlayback({ waitForSource: true });
     else announce(`${film.name} selected`);
   }
 }
