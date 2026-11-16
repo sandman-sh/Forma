@@ -137,6 +137,8 @@ let videoPalettePinned = false;
 let points = [];
 let sketchIndex = 1;
 let autoplayAttempted = false;
+let mediaRequested = false;
+let mediaSourceLoaded = false;
 let brushDrag = null;
 let customFrame = null;
 let erasing = false;
@@ -305,17 +307,6 @@ function startVideoInFrame() {
   view.classList.add('has-frame');
   hideDrawingPrompt();
   syncPlayOverlay();
-  // Keep playback unmuted by default. Browsers that block audible autoplay
-  // leave the frame ready for the viewer's first Play gesture.
-  loadState.textContent = 'Loading video…';
-  if (media.readyState < 2) loadState.classList.add('is-visible');
-  const play = () => media.play().catch(() => announce('Frame ready — press play to start with sound'));
-  if ((media.networkState ?? HTMLMediaElement.NETWORK_EMPTY) === HTMLMediaElement.NETWORK_EMPTY) {
-    media.load();
-    requestAnimationFrame(play);
-  } else {
-    play();
-  }
 }
 
 function renderEraseMask(group, strokes, width, height) {
@@ -402,6 +393,9 @@ function updateFrame(shape, customPoints = null, activate = true, preserveErasur
 function clearCanvas() {
   media.pause();
   try { media.currentTime = 0; } catch { /* The source may not have metadata yet. */ }
+  mediaRequested = false;
+  view.classList.remove('media-requested', 'media-error');
+  loadState.classList.remove('is-visible');
   view.classList.remove('has-frame');
   view.classList.remove('is-playing');
   syncPlayOverlay();
@@ -458,6 +452,49 @@ function announce(message) {
   announce.timeout = window.setTimeout(() => loadState.classList.remove('is-visible'), 1800);
 }
 
+function applyFilmSource(film) {
+  if (film.playbackId) {
+    media.crossOrigin = 'anonymous';
+    media.source = {
+      playbackId: film.playbackId,
+      playback: { maxResolution: '1080p' },
+      poster: { time: 2, width: 1280 },
+      storyboard: { format: 'webp' },
+    };
+  } else if (film.local) {
+    media.removeAttribute('crossorigin');
+    // Blob URLs have no file extension, so tell the media adapter the MIME type.
+    media.source = { src: film.src, type: film.type || 'video/mp4' };
+  } else {
+    if (!film.src) {
+      announce(`${film.name} is not available right now`);
+      return false;
+    }
+    media.removeAttribute('crossorigin');
+    media.source = { src: film.src, type: film.type || 'video/mp4' };
+  }
+  mediaSourceLoaded = true;
+  return true;
+}
+
+function requestSelectedVideoPlayback() {
+  const film = films[activeFilm];
+  if (!film) return;
+  const retryingFailedSource = view.classList.contains('media-error');
+  mediaRequested = true;
+  view.classList.add('media-requested');
+  view.classList.remove('media-error');
+  loadState.textContent = 'Loading video…';
+  loadState.classList.add('is-visible');
+  if (!mediaSourceLoaded && !applyFilmSource(film)) return;
+  player.store.setMuted(false);
+  if (retryingFailedSource) media.load();
+  media.play().catch(() => {
+    loadState.textContent = 'Press play to start the video';
+    loadState.classList.add('is-visible');
+  });
+}
+
 function setFilm(id, { focus = false } = {}) {
   const film = films[id];
   if (!film) return;
@@ -475,26 +512,8 @@ function setFilm(id, { focus = false } = {}) {
   }
   activeFilm = id;
   media.pause();
-  if (film.playbackId) {
-    media.crossOrigin = 'anonymous';
-    media.source = {
-      playbackId: film.playbackId,
-      playback: { maxResolution: '1080p' },
-      poster: { time: 2, width: 1280 },
-      storyboard: { format: 'webp' },
-    };
-  } else if (film.local) {
-    media.removeAttribute('crossorigin');
-    // Blob URLs have no file extension, so tell the media adapter the MIME type.
-    media.source = { src: film.src, type: film.type || 'video/mp4' };
-  } else {
-    media.removeAttribute('crossorigin');
-    if (!film.src) {
-      announce(`${film.name} is not available right now`);
-      return;
-    }
-    media.src = film.src;
-  }
+  mediaSourceLoaded = false;
+  if (mediaRequested && !applyFilmSource(film)) return;
   label.textContent = `${film.name} video`;
   frameNumber.textContent = String(++sketchIndex).padStart(3, '0');
   filmRadios.forEach((radio) => {
@@ -505,8 +524,8 @@ function setFilm(id, { focus = false } = {}) {
     if (selected && focus) radio.focus();
   });
   if (view.classList.contains('has-frame')) {
-    announce(`Loading ${film.name}`);
-    startVideoInFrame();
+    if (mediaRequested) requestSelectedVideoPlayback();
+    else announce(`${film.name} selected`);
   }
 }
 
@@ -1496,16 +1515,21 @@ document.querySelector('.play-control').addEventListener('click', (event) => {
 canvasPlayOverlay.addEventListener('click', () => {
   if (!view.classList.contains('has-frame')) {
     updateFrame('wide');
-    return;
   }
-  media.play().catch(() => announce('Press play again to start the video'));
+  requestSelectedVideoPlayback();
 });
 
 media.addEventListener('loadeddata', () => {
+  view.classList.remove('media-error');
   loadState.classList.remove('is-visible');
   autoplayAttempted = true;
 });
-media.addEventListener('error', () => announce('This film could not load. Choose another study.'));
+media.addEventListener('error', () => {
+  if (!mediaRequested) return;
+  view.classList.add('media-error');
+  loadState.textContent = 'Video could not load. Check your connection and press Play to retry.';
+  loadState.classList.add('is-visible');
+});
 media.addEventListener('playing', () => {
   loadState.classList.remove('is-visible');
   view.classList.add('is-playing');
@@ -1543,9 +1567,7 @@ const resizeObserver = new ResizeObserver(() => {
 resizeObserver.observe(view);
 
 setFilm(activeFilm);
-// Attempt audible autoplay; browsers that block it leave the unmuted player ready for Play.
 updateFrame('wide', null, false);
-player.store.setMuted(false);
 startVideoInFrame();
 void restoreLocalVideos();
 void restoreLocalWallpapers();
