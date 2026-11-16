@@ -139,6 +139,7 @@ let sketchIndex = 1;
 let autoplayAttempted = false;
 let mediaRequested = false;
 let mediaSourceLoaded = false;
+let playbackRequestId = 0;
 let brushDrag = null;
 let customFrame = null;
 let erasing = false;
@@ -481,6 +482,7 @@ function requestSelectedVideoPlayback() {
   const film = films[activeFilm];
   if (!film) return;
   const retryingFailedSource = view.classList.contains('media-error');
+  const requestId = ++playbackRequestId;
   mediaRequested = true;
   view.classList.add('media-requested');
   view.classList.remove('media-error');
@@ -489,9 +491,26 @@ function requestSelectedVideoPlayback() {
   if (!mediaSourceLoaded && !applyFilmSource(film)) return;
   player.store.setMuted(false);
   if (retryingFailedSource) media.load();
-  media.play().catch(() => {
-    loadState.textContent = 'Press play to start the video';
+  const reportPlayFailure = (error) => {
+    if (requestId !== playbackRequestId || error?.name === 'AbortError') return;
+    loadState.textContent = 'Video could not start. Press Play to retry.';
     loadState.classList.add('is-visible');
+  };
+  media.addEventListener('canplay', () => {
+    if (requestId !== playbackRequestId || !mediaRequested || !media.paused) return;
+    media.play().catch(reportPlayFailure);
+  }, { once: true });
+  media.play().catch((error) => {
+    // Changing the Mux source can interrupt this first play() call. Keep the
+    // click alive and retry as soon as the newly selected stream can play.
+    if (requestId !== playbackRequestId) return;
+    if (error?.name === 'AbortError') {
+      if (media.paused && media.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
+        media.play().catch(reportPlayFailure);
+      }
+      return;
+    }
+    if (media.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) reportPlayFailure(error);
   });
 }
 
