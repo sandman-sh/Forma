@@ -53,6 +53,7 @@ const mediaWindow = document.querySelector('.media-window');
 const artWindow = document.querySelector('#art-window');
 const artSvg = document.querySelector('#art-svg');
 const drawnArt = document.querySelector('#drawn-art');
+const artLayerMasks = document.querySelector('#art-layer-masks');
 const shapeSelectionLayer = document.querySelector('#shape-selection-layer');
 const wallpaperImage = document.querySelector('#wallpaper-image');
 const view = document.querySelector('#video-view');
@@ -63,9 +64,6 @@ const drawingPreview = document.querySelector('#drawing-preview');
 const eraseMaskStrokes = document.querySelector('#erase-mask-strokes');
 const eraseMask = document.querySelector('#video-erase-mask');
 const eraseMaskRect = eraseMask.querySelector('rect');
-const artEraseMaskStrokes = document.querySelector('#art-erase-mask-strokes');
-const artEraseMask = document.querySelector('#art-erase-mask');
-const artEraseMaskRect = artEraseMask.querySelector('rect');
 const outlineEraseMask = document.querySelector('#outline-erase-mask');
 const outlineEraseMaskRect = document.querySelector('#outline-erase-mask-rect');
 const outlineEraseMaskStrokes = document.querySelector('#outline-erase-mask-strokes');
@@ -148,7 +146,9 @@ let eraserSize = Number(eraserSizeInput.value);
 let frameClipBase = '';
 let frameClipPoints = [];
 let videoEraseStrokes = [];
-let artEraseStrokes = [];
+const artLayers = [];
+let currentArtLayer = null;
+let artLayerSequence = 0;
 let activeEraseStroke = null;
 
 function hideDrawingPrompt() {
@@ -309,15 +309,81 @@ function startVideoInFrame() {
   syncPlayOverlay();
 }
 
-function renderEraseMask(group, strokes, width, height) {
+function renderEraseMask(group, strokes, width, height, color = 'black') {
   group.replaceChildren(...strokes.map((stroke) => {
     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     const strokePoints = stroke.points.map(([x, y]) => [x * width, y * height]);
     if (strokePoints.length === 1) strokePoints.push([strokePoints[0][0] + .01, strokePoints[0][1]]);
     path.setAttribute('d', `M${strokePoints.map(([x, y]) => `${x.toFixed(2)} ${y.toFixed(2)}`).join(' L')}`);
     path.setAttribute('stroke-width', String(stroke.size));
+    path.setAttribute('stroke', color);
     return path;
   }));
+}
+
+function createArtLayer() {
+  const id = `art-layer-mask-${++artLayerSequence}`;
+  const mask = document.createElementNS('http://www.w3.org/2000/svg', 'mask');
+  mask.id = id;
+  mask.setAttribute('maskUnits', 'userSpaceOnUse');
+  mask.setAttribute('maskContentUnits', 'userSpaceOnUse');
+  mask.setAttribute('x', '0');
+  mask.setAttribute('y', '0');
+  mask.style.maskType = 'luminance';
+
+  const background = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  background.setAttribute('fill', 'white');
+  const videoCutout = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  videoCutout.setAttribute('fill', 'black');
+  const videoHoles = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  videoHoles.setAttribute('fill', 'none');
+  videoHoles.setAttribute('stroke', 'white');
+  videoHoles.setAttribute('stroke-linecap', 'round');
+  videoHoles.setAttribute('stroke-linejoin', 'round');
+  const eraseMask = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  eraseMask.setAttribute('fill', 'none');
+  eraseMask.setAttribute('stroke', 'black');
+  eraseMask.setAttribute('stroke-linecap', 'round');
+  eraseMask.setAttribute('stroke-linejoin', 'round');
+  mask.append(background, videoCutout, videoHoles, eraseMask);
+  artLayerMasks.append(mask);
+
+  const wrapper = document.createElement('div');
+  wrapper.className = 'art-layer';
+  wrapper.style.mask = `url(#${id})`;
+  wrapper.style.webkitMask = `url(#${id})`;
+  const layerSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  layerSvg.classList.add('art-layer-svg');
+  layerSvg.setAttribute('preserveAspectRatio', 'none');
+  const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  layerSvg.append(group);
+  wrapper.append(layerSvg);
+  drawnArt.append(wrapper);
+  const layer = { wrapper, svg: layerSvg, group, mask, background, videoCutout, videoHoles, eraseMask, eraseStrokes: [] };
+  artLayers.push(layer);
+  currentArtLayer = group;
+  const { width, height } = view.getBoundingClientRect();
+  updateArtLayerMask(layer, width, height);
+  return group;
+}
+
+function getCurrentArtLayer() {
+  return currentArtLayer || createArtLayer();
+}
+
+function updateArtLayerMask(layer, width, height) {
+  const canvasHeight = viewBoxHeight();
+  layer.svg.setAttribute('viewBox', `0 0 1000 ${canvasHeight}`);
+  layer.mask.setAttribute('width', String(width));
+  layer.mask.setAttribute('height', String(height));
+  layer.background.setAttribute('width', String(width));
+  layer.background.setAttribute('height', String(height));
+  const pointsInPixels = frameClipPoints.map(([x, y]) => [x * width, y * height]);
+  layer.videoCutout.setAttribute('d', pointsInPixels.length >= 3
+    ? `M${pointsInPixels.map(([x, y]) => `${x.toFixed(2)} ${y.toFixed(2)}`).join(' L')} Z`
+    : '');
+  renderEraseMask(layer.videoHoles, videoEraseStrokes, width, height, 'white');
+  renderEraseMask(layer.eraseMask, layer.eraseStrokes, width, height, 'black');
 }
 
 function refreshClipPath() {
@@ -328,12 +394,8 @@ function refreshClipPath() {
   eraseMask.setAttribute('height', String(height));
   eraseMaskRect.setAttribute('width', String(width));
   eraseMaskRect.setAttribute('height', String(height));
-  artEraseMask.setAttribute('width', String(width));
-  artEraseMask.setAttribute('height', String(height));
-  artEraseMaskRect.setAttribute('width', String(width));
-  artEraseMaskRect.setAttribute('height', String(height));
   renderEraseMask(eraseMaskStrokes, videoEraseStrokes, width, height);
-  renderEraseMask(artEraseMaskStrokes, artEraseStrokes, width, height);
+  artLayers.forEach((layer) => updateArtLayerMask(layer, width, height));
   const canvasHeight = viewBoxHeight();
   svg.setAttribute('viewBox', `0 0 1000 ${canvasHeight}`);
   artSvg.setAttribute('viewBox', `0 0 1000 ${canvasHeight}`);
@@ -359,10 +421,8 @@ function refreshClipPath() {
   const cssPath = `path("${outerPath}")`;
   mediaWindow.style.clipPath = cssPath;
   mediaWindow.style.webkitClipPath = cssPath;
-  const canvasPath = `M0 0 L${width.toFixed(2)} 0 L${width.toFixed(2)} ${height.toFixed(2)} L0 ${height.toFixed(2)} Z`;
-  const outsidePlayerPath = `path(evenodd, "${canvasPath} ${outerPath}")`;
-  artWindow.style.clipPath = outsidePlayerPath;
-  artWindow.style.webkitClipPath = outsidePlayerPath;
+  artWindow.style.clipPath = '';
+  artWindow.style.webkitClipPath = '';
 }
 
 function updateFrame(shape, customPoints = null, activate = true, preserveErasures = false) {
@@ -403,9 +463,11 @@ function clearCanvas() {
   frameClipBase = '';
   frameClipPoints = [];
   videoEraseStrokes = [];
-  artEraseStrokes = [];
   activeEraseStroke = null;
   drawnArt.replaceChildren();
+  artLayerMasks.replaceChildren();
+  artLayers.length = 0;
+  currentArtLayer = null;
   canvasShapes.length = 0;
   selectedCanvasShape = null;
   shapeSelectionLayer.replaceChildren();
@@ -618,6 +680,16 @@ function pointInVideoFrame([x, y]) {
   return inside;
 }
 
+function pointInVisibleVideo([x, y]) {
+  if (!pointInVideoFrame([x, y])) return false;
+  const { width, height } = view.getBoundingClientRect();
+  const eraseStrokes = videoEraseStrokes.map((stroke) => ({
+    radius: stroke.size / 2,
+    path: stroke.points.map(([px, py]) => [px * width, py * height]),
+  }));
+  return !pointCoveredByVideoEraser(x, y, width, height, eraseStrokes);
+}
+
 function pointCoveredByVideoEraser(x, y, width, height, strokes) {
   const px = x * width;
   const py = y * height;
@@ -778,7 +850,7 @@ function updateShapeColor(color, { selected = false } = {}) {
 }
 
 function applyShapeEditAt(point, tool, pointerId) {
-  if (pointInVideoFrame([point[0] / 1000, point[1] / (svg.viewBox.baseVal.height || viewBoxHeight())])) return false;
+  if (pointInVisibleVideo([point[0] / 1000, point[1] / (svg.viewBox.baseVal.height || viewBoxHeight())])) return false;
   const shape = findCanvasShapeAt([point[0] / 1000, point[1] / (svg.viewBox.baseVal.height || viewBoxHeight())]);
   if (tool === 'shape-fill') {
     if (shape) {
@@ -818,7 +890,7 @@ svg.addEventListener('pointerdown', (event) => {
   }
   if (tool.startsWith('shape-')) {
     const normalizedPoint = [point[0] / 1000, point[1] / (svg.viewBox.baseVal.height || viewBoxHeight())];
-    if (pointInVideoFrame(normalizedPoint)) return;
+    if (pointInVisibleVideo(normalizedPoint)) return;
     hideDrawingPrompt();
     const shapeType = tool.slice('shape-'.length);
     const elementTag = ['rect', 'ellipse'].includes(shapeType) ? shapeType : 'path';
@@ -831,7 +903,7 @@ svg.addEventListener('pointerdown', (event) => {
       fill: currentShapeFill, opacity: currentShapeOpacity, stroke: '#252629', element,
     };
     canvasShapes.push(shapeDraft);
-    drawnArt.append(element);
+    getCurrentArtLayer().append(element);
     shapeDrawing = true;
     selectedCanvasShape = shapeDraft;
     renderCanvasShape(shapeDraft);
@@ -844,14 +916,15 @@ svg.addEventListener('pointerdown', (event) => {
     priorErasePoint = eventPoint(event);
     activeEraseStroke = { size: eraserSize, points: [] };
     if (frameClipBase) videoEraseStrokes.push(activeEraseStroke);
-    artEraseStrokes.push(activeEraseStroke);
+    artLayers.forEach((layer) => layer.eraseStrokes.push(activeEraseStroke));
+    currentArtLayer = null;
     svg.setPointerCapture(event.pointerId);
     eraseBetween(priorErasePoint, priorErasePoint);
     event.preventDefault();
     return;
   }
   if (view.dataset.tool === 'color-pencil') {
-    if (pointInVideoFrame([point[0] / 1000, point[1] / svg.viewBox.baseVal.height])) return;
+    if (pointInVisibleVideo([point[0] / 1000, point[1] / svg.viewBox.baseVal.height])) return;
     hideDrawingPrompt();
     colorDrawing = true;
     points = [point];
@@ -859,7 +932,7 @@ svg.addEventListener('pointerdown', (event) => {
     artPath.classList.add('art-stroke');
     artPath.setAttribute('stroke', activeInk);
     artPath.setAttribute('stroke-width', String(pencilSize));
-    drawnArt.append(artPath);
+    getCurrentArtLayer().append(artPath);
     svg.setPointerCapture(event.pointerId);
     event.preventDefault();
     return;
