@@ -69,6 +69,7 @@ const outlineEraseMaskRect = document.querySelector('#outline-erase-mask-rect');
 const outlineEraseMaskStrokes = document.querySelector('#outline-erase-mask-strokes');
 const eraserCursor = document.querySelector('#eraser-cursor');
 const eraserSettings = document.querySelector('#eraser-settings');
+const toolRail = document.querySelector('.tool-rail');
 const eraserSizeInput = document.querySelector('#eraser-size');
 const eraserSizeValue = document.querySelector('#eraser-size-value');
 const inkSettings = document.querySelector('#ink-settings');
@@ -114,6 +115,7 @@ const drawingPrompt = document.querySelector('#drawing-prompt');
 let activeShape = 'wide';
 let activeFilm = 'joyride';
 let drawing = false;
+let drawingPointerType = 'mouse';
 let colorDrawing = false;
 let shapeDrawing = false;
 let shapeDraft = null;
@@ -175,12 +177,48 @@ function setInkSettingsOpen(open) {
   inkSettings.hidden = !open;
   inkSettings.setAttribute('aria-hidden', String(!open));
   colorPencilButton.setAttribute('aria-expanded', String(open));
+  if (open) positionDockPanel(colorPencilButton, inkSettings);
 }
 
 function setVideoPaletteOpen(open) {
   videoPalettePanel.hidden = !open;
   videoPalettePanel.setAttribute('aria-hidden', String(!open));
   videoPaletteTrigger.setAttribute('aria-expanded', String(open));
+  if (open) positionDockPanel(videoPaletteTrigger, videoPalettePanel);
+}
+
+function usesHorizontalDock() {
+  return matchMedia('(max-height: 520px) and (max-width: 900px), (max-width: 600px) and (min-height: 521px)').matches;
+}
+
+function positionDockPanel(trigger, panel) {
+  if (!usesHorizontalDock()) {
+    panel.style.position = '';
+    panel.style.left = '';
+    panel.style.top = '';
+    return;
+  }
+  if (panel.hidden) return;
+  panel.style.position = 'fixed';
+  const triggerRect = trigger.getBoundingClientRect();
+  const panelRect = panel.getBoundingClientRect();
+  const margin = 8;
+  const bottomDock = matchMedia('(max-width: 600px) and (min-height: 521px)').matches;
+  const maxLeft = Math.max(margin, innerWidth - panelRect.width - margin);
+  const left = Math.max(margin, Math.min(triggerRect.left, maxLeft));
+  const maxTop = Math.max(margin, innerHeight - panelRect.height - margin);
+  let top = bottomDock ? triggerRect.top - panelRect.height - margin : triggerRect.bottom + margin;
+  if (top < margin || top > maxTop) top = Math.max(margin, Math.min(triggerRect.bottom + margin, maxTop));
+  panel.style.left = `${left}px`;
+  panel.style.top = `${top}px`;
+}
+
+function repositionDockPanels() {
+  positionDockPanel(colorPencilButton, inkSettings);
+  positionDockPanel(document.querySelector('[data-tool="eraser"]'), eraserSettings);
+  positionDockPanel(videoPaletteTrigger, videoPalettePanel);
+  if (!shapesPanel.hidden) positionToolPopover(shapesTrigger, shapesPanel);
+  if (!wallpaperPanel.hidden) positionToolPopover(wallpaperTrigger, wallpaperPanel);
 }
 
 function setPopoverOpen(trigger, panel, open) {
@@ -217,6 +255,10 @@ function positionToolPopover(trigger, panel) {
   panel.style.top = `${Math.max(margin, Math.min(top, innerHeight - panelRect.height - margin))}px`;
 }
 
+function isHoverPointer(event) {
+  return event.pointerType === 'mouse' || (event.pointerType === 'pen' && matchMedia('(hover:hover) and (pointer:fine)').matches);
+}
+
 window.addEventListener('resize', () => {
   if (!shapesPanel.hidden) positionToolPopover(shapesTrigger, shapesPanel);
   if (!wallpaperPanel.hidden) positionToolPopover(wallpaperTrigger, wallpaperPanel);
@@ -224,14 +266,18 @@ window.addEventListener('resize', () => {
 window.visualViewport?.addEventListener('resize', () => {
   if (!shapesPanel.hidden) positionToolPopover(shapesTrigger, shapesPanel);
   if (!wallpaperPanel.hidden) positionToolPopover(wallpaperTrigger, wallpaperPanel);
+  repositionDockPanels();
 });
+window.addEventListener('resize', repositionDockPanels);
+toolRail.addEventListener('scroll', repositionDockPanels, { passive: true });
 
 helpTrigger.addEventListener('click', () => {
   helpPinned = !helpPinned;
   setHelpOpen(helpPinned);
 });
-helpHub.addEventListener('pointerenter', () => setHelpOpen(true));
-helpHub.addEventListener('pointerleave', () => {
+helpHub.addEventListener('pointerenter', (event) => { if (isHoverPointer(event)) setHelpOpen(true); });
+helpHub.addEventListener('pointerleave', (event) => {
+  if (!isHoverPointer(event)) return;
   if (!helpPinned && !helpHub.matches(':focus-within')) setHelpOpen(false);
 });
 helpHub.addEventListener('focusin', () => setHelpOpen(true));
@@ -507,6 +553,7 @@ function setTool(tool) {
     }
   });
   eraserSettings.hidden = resolved !== 'eraser';
+  if (resolved === 'eraser') positionDockPanel(document.querySelector('[data-tool="eraser"]'), eraserSettings);
   setInkSettingsOpen(resolved === 'color-pencil');
   renderCanvasShapeSelection();
   eraserCursor.classList.remove('is-visible');
@@ -944,6 +991,7 @@ svg.addEventListener('pointerdown', (event) => {
   }
   hideDrawingPrompt();
   drawing = true;
+  drawingPointerType = event.pointerType || 'mouse';
   points = [eventPoint(event)];
   svg.setPointerCapture(event.pointerId);
   drawingPreview.setAttribute('d', drawPath());
@@ -1009,16 +1057,22 @@ svg.addEventListener('pointermove', (event) => {
     return;
   }
   if (colorDrawing) {
-    const next = eventPoint(event);
-    const prior = points.at(-1);
-    if (Math.hypot(next[0] - prior[0], next[1] - prior[1]) > 2) points.push(next);
+    const samples = event.getCoalescedEvents?.() || [event];
+    for (const sample of samples) {
+      const next = eventPoint(sample);
+      const prior = points.at(-1);
+      if (Math.hypot(next[0] - prior[0], next[1] - prior[1]) > 1) points.push(next);
+    }
     artPath.setAttribute('d', drawPath());
     return;
   }
   if (!drawing) return;
-  const next = eventPoint(event);
-  const prior = points.at(-1);
-  if (Math.hypot(next[0] - prior[0], next[1] - prior[1]) > 3.4) points.push(next);
+  const samples = event.getCoalescedEvents?.() || [event];
+  for (const sample of samples) {
+    const next = eventPoint(sample);
+    const prior = points.at(-1);
+    if (Math.hypot(next[0] - prior[0], next[1] - prior[1]) > 1.5) points.push(next);
+  }
   drawingPreview.setAttribute('d', drawPath());
 });
 
@@ -1085,17 +1139,49 @@ function finishDrawing() {
   if (points.length >= 3) {
     const xs = points.map(([x]) => x);
     const ys = points.map(([, y]) => y);
-    const area = (Math.max(...xs) - Math.min(...xs)) * (Math.max(...ys) - Math.min(...ys));
-    const minimumFrameArea = Math.max(6000, (svg.viewBox.baseVal.height || viewBoxHeight()) * 8);
-    if (area > minimumFrameArea) {
+    const rect = svg.getBoundingClientRect();
+    const viewHeight = svg.viewBox.baseVal.height || viewBoxHeight();
+    const widthPx = (Math.max(...xs) - Math.min(...xs)) * rect.width / 1000;
+    const heightPx = (Math.max(...ys) - Math.min(...ys)) * rect.height / viewHeight;
+    const minimumSidePx = drawingPointerType === 'touch' ? 10 : 22;
+    if (widthPx >= minimumSidePx && heightPx >= minimumSidePx) {
       updateFrame('custom', points);
       frameNumber.textContent = String(++sketchIndex).padStart(3, '0');
       announce('Hand-drawn frame applied');
     } else {
-      announce('Make the outline a little larger to create a video frame');
+      announce(`Make the outline at least ${minimumSidePx} pixels wide and tall`);
     }
   }
   points = [];
+}
+
+function cancelDrawing() {
+  if (drawing) {
+    drawing = false;
+    points = [];
+    drawingPreview.setAttribute('d', '');
+  }
+  if (colorDrawing) {
+    colorDrawing = false;
+    points = [];
+    artPath?.remove();
+    artPath = null;
+  }
+  if (shapeDrawing && shapeDraft) {
+    shapeDraft.element.remove();
+    canvasShapes.splice(canvasShapes.indexOf(shapeDraft), 1);
+    shapeDraft = null;
+    shapeDrawing = false;
+    selectedCanvasShape = null;
+    renderCanvasShapeSelection();
+  }
+  shapeInteraction = null;
+  if (erasing) {
+    erasing = false;
+    priorErasePoint = null;
+    activeEraseStroke = null;
+    if (isVideoFrameFullyErased()) clearCanvas();
+  }
 }
 
 svg.addEventListener('pointerup', (event) => {
@@ -1129,7 +1215,7 @@ svg.addEventListener('pointerup', (event) => {
   }
   finishDrawing();
 });
-svg.addEventListener('pointercancel', finishDrawing);
+svg.addEventListener('pointercancel', cancelDrawing);
 svg.addEventListener('pointerleave', () => eraserCursor.classList.remove('is-visible'));
 svg.addEventListener('pointerenter', (event) => {
   if (view.dataset.tool !== 'eraser') return;
@@ -1408,8 +1494,9 @@ function bindPopover(trigger, panel, wrap, isPinned, setPinned) {
     setPinned(!isPinned());
     setPopoverOpen(trigger, panel, isPinned());
   });
-  wrap.addEventListener('pointerenter', () => setPopoverOpen(trigger, panel, true));
-  wrap.addEventListener('pointerleave', () => {
+  wrap.addEventListener('pointerenter', (event) => { if (isHoverPointer(event)) setPopoverOpen(trigger, panel, true); });
+  wrap.addEventListener('pointerleave', (event) => {
+    if (!isHoverPointer(event)) return;
     if (!isPinned() && !wrap.matches(':focus-within')) setPopoverOpen(trigger, panel, false);
   });
   wrap.addEventListener('focusin', () => setPopoverOpen(trigger, panel, true));
@@ -1497,8 +1584,9 @@ videoPaletteTrigger.addEventListener('click', () => {
   videoPalettePinned = !videoPalettePinned;
   setVideoPaletteOpen(videoPalettePinned);
 });
-videoPaletteWrap.addEventListener('pointerenter', () => setVideoPaletteOpen(true));
-videoPaletteWrap.addEventListener('pointerleave', () => {
+videoPaletteWrap.addEventListener('pointerenter', (event) => { if (isHoverPointer(event)) setVideoPaletteOpen(true); });
+videoPaletteWrap.addEventListener('pointerleave', (event) => {
+  if (!isHoverPointer(event)) return;
   if (!videoPalettePinned && !videoPaletteWrap.matches(':focus-within')) setVideoPaletteOpen(false);
 });
 videoPaletteWrap.addEventListener('focusin', () => setVideoPaletteOpen(true));

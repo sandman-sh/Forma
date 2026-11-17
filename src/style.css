@@ -65,7 +65,7 @@ button:focus-visible, a:focus-visible, media-time-slider:focus-visible, media-vo
 .media-window { position: absolute; inset: 0; width: 100%; height: 100%; overflow: hidden; clip-path: url(#video-clip); -webkit-clip-path: url(#video-clip); opacity: 0; transition: opacity .22s ease; }
 .video-view.has-frame .media-window { opacity: 1; }
 .media-window video,.media-window mux-video { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; --media-object-fit: cover; background: #fff; }
-.frame-overlay { position: absolute; z-index: 2; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.frame-overlay { position: absolute; z-index: 2; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; touch-action:none; -webkit-user-select:none; user-select:none; }
 .frame-outline { fill: none; stroke: #252629; stroke-width: 2.25; vector-effect: non-scaling-stroke; filter: drop-shadow(0 1px 1px rgba(255,255,255,.88)); }
 .drawing-preview { fill: rgba(32,33,36,.025); stroke: #292a2e; stroke-width: 2.2; stroke-dasharray: 5 3; vector-effect: non-scaling-stroke; filter: drop-shadow(0 1px 1px rgba(255,255,255,.8)); }
 .draw-hit-area { pointer-events: all; fill: transparent; cursor: crosshair; touch-action: none; }
@@ -273,7 +273,8 @@ button:focus-visible, a:focus-visible, media-time-slider:focus-visible, media-vo
 .help-trigger:hover { color:#fff; background:#111214; transform:scale(1.03); }
 .help-trigger svg { width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
 .help-popover { position:absolute; top:54px; right:0; width:min(320px,calc(100vw - 94px)); padding:19px 20px 17px; border:1px solid rgba(20,20,22,.09); border-radius:18px; color:#26272b; background:rgba(255,255,255,.97); box-shadow:0 16px 42px rgba(0,0,0,.14),0 2px 8px rgba(0,0,0,.04); opacity:0; visibility:hidden; pointer-events:none; transform:translateY(-4px) scale(.985); transform-origin:top right; transition:opacity .16s ease,visibility .16s ease,transform .18s ease; backdrop-filter:blur(24px) saturate(170%); -webkit-backdrop-filter:blur(24px) saturate(170%); }
-.help-hub:hover .help-popover,.help-hub:focus-within .help-popover,.help-hub[data-open="true"] .help-popover { opacity:1; visibility:visible; pointer-events:auto; transform:translateY(0) scale(1); }
+.help-hub:focus-within .help-popover,.help-hub[data-open="true"] .help-popover { opacity:1; visibility:visible; pointer-events:auto; transform:translateY(0) scale(1); }
+@media (hover:hover) and (pointer:fine) { .help-hub:hover .help-popover { opacity:1; visibility:visible; pointer-events:auto; transform:translateY(0) scale(1); } }
 .help-popover h2 { margin:0 0 13px; color:#17181a; font-size:14px; font-weight:650; letter-spacing:-.025em; }
 .help-popover dl { display:grid; gap:11px; margin:0; }
 .help-popover dl>div { display:grid; grid-template-columns:102px 1fr; gap:10px; align-items:start; }
@@ -333,6 +334,8 @@ button:focus-visible, a:focus-visible, media-time-slider:focus-visible, media-vo
 
 /* Fit the full studio into safe areas and keep touch controls comfortable. */
 html, body { overscroll-behavior:none; -webkit-text-size-adjust:100%; }
+button { touch-action:manipulation; }
+input[type="range"] { touch-action:pan-x; }
 button, a, input, select, media-time-slider, media-volume-slider { -webkit-tap-highlight-color:transparent; }
 .studio-layout { padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
 .tool-rail, .tool-popover, .video-palette-panel, .eraser-settings, .ink-settings, .help-popover, .player-settings-content { overscroll-behavior:contain; }
@@ -342,7 +345,7 @@ button, a, input, select, media-time-slider, media-volume-slider { -webkit-tap-h
 @media (max-width:600px) and (min-height:521px) {
   .studio-layout { grid-template-columns:minmax(0,1fr); grid-template-rows:minmax(0,1fr) 64px; }
   .canvas-panel { grid-row:1; grid-column:1; }
-  .tool-rail { grid-row:2; grid-column:1; flex-direction:row; justify-content:flex-start; align-items:center; gap:5px; width:100%; height:100%; min-width:0; padding:4px 8px; overflow-x:auto; overflow-y:hidden; border-top:1px solid #ededee; border-right:0; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
+  .tool-rail { grid-row:2; grid-column:1; flex-direction:row; justify-content:flex-start; align-items:center; gap:5px; width:100%; height:100%; min-width:0; padding:4px 8px; overflow-x:auto; overflow-y:hidden; border-top:1px solid #ededee; border-right:0; backdrop-filter:none; -webkit-backdrop-filter:none; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
   .tool-rail::-webkit-scrollbar { display:none; }
   .rail-group { display:flex; flex:0 0 auto; flex-direction:row; align-items:center; justify-items:initial; gap:3px; width:auto; }
   .rail-group > *, .tool-rail > .rail-divider, .tool-rail > .icon-tool { flex:0 0 auto; }
@@ -359,7 +362,7 @@ button, a, input, select, media-time-slider, media-volume-slider { -webkit-tap-h
 
 @media (max-height:520px) and (max-width:900px) {
   .studio-layout { grid-template-rows:58px minmax(0,1fr); }
-  .tool-rail { padding:4px 8px; overflow-x:auto; overflow-y:hidden; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
+  .tool-rail { padding:4px 8px; overflow-x:auto; overflow-y:hidden; backdrop-filter:none; -webkit-backdrop-filter:none; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
   .tool-rail::-webkit-scrollbar { display:none; }
   .rail-group, .tool-rail > .rail-divider, .tool-rail > .icon-tool { flex:0 0 auto; }
   .rail-spacer { flex:1 0 8px; min-width:8px; }
@@ -381,4 +384,10 @@ button, a, input, select, media-time-slider, media-volume-slider { -webkit-tap-h
   .icon-tool { width:46px; height:48px; }
   .rail-divider { margin-inline:1px; }
   .help-popover dl>div { grid-template-columns:86px 1fr; gap:7px; }
+}
+
+@media (max-width:600px) and (min-height:521px), (max-height:520px) and (max-width:900px) {
+  .tool-rail { touch-action:pan-x; }
+  .video-palette-panel, .ink-settings, .eraser-settings { position:fixed; inset:auto; max-height:calc(100dvh - 76px); overflow:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
+  .film-tools .film-swatch { width:48px; height:48px; }
 }
