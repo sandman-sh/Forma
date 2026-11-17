@@ -196,12 +196,13 @@ function positionToolPopover(trigger, panel) {
   const margin = 12;
   const gap = 8;
   const horizontalDock = matchMedia('(max-height: 520px) and (max-width: 900px)').matches;
+  const bottomDock = matchMedia('(max-width: 600px) and (min-height: 521px)').matches;
   let left;
   let top;
 
-  if (horizontalDock) {
+  if (horizontalDock || bottomDock) {
     left = Math.max(margin, Math.min(triggerRect.left, innerWidth - panelRect.width - margin));
-    top = triggerRect.bottom + gap;
+    top = bottomDock ? triggerRect.top - panelRect.height - gap : triggerRect.bottom + gap;
     if (top + panelRect.height > innerHeight - margin) top = triggerRect.top - panelRect.height - gap;
   } else {
     const rightLeft = triggerRect.right + gap;
@@ -217,6 +218,10 @@ function positionToolPopover(trigger, panel) {
 }
 
 window.addEventListener('resize', () => {
+  if (!shapesPanel.hidden) positionToolPopover(shapesTrigger, shapesPanel);
+  if (!wallpaperPanel.hidden) positionToolPopover(wallpaperTrigger, wallpaperPanel);
+});
+window.visualViewport?.addEventListener('resize', () => {
   if (!shapesPanel.hidden) positionToolPopover(shapesTrigger, shapesPanel);
   if (!wallpaperPanel.hidden) positionToolPopover(wallpaperTrigger, wallpaperPanel);
 });
@@ -1077,16 +1082,17 @@ function finishDrawing() {
   if (!drawing) return;
   drawing = false;
   drawingPreview.setAttribute('d', '');
-  if (points.length >= 5) {
+  if (points.length >= 3) {
     const xs = points.map(([x]) => x);
     const ys = points.map(([, y]) => y);
     const area = (Math.max(...xs) - Math.min(...xs)) * (Math.max(...ys) - Math.min(...ys));
-    if (area > 14000) {
+    const minimumFrameArea = Math.max(6000, (svg.viewBox.baseVal.height || viewBoxHeight()) * 8);
+    if (area > minimumFrameArea) {
       updateFrame('custom', points);
       frameNumber.textContent = String(++sketchIndex).padStart(3, '0');
       announce('Hand-drawn frame applied');
     } else {
-      announce('Draw a wider outline to shape the frame');
+      announce('Make the outline a little larger to create a video frame');
     }
   }
   points = [];
